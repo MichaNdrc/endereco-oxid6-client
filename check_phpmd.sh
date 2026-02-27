@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Find PHP files and run PHPMD, excluding certain paths
 OUTPUT=$(find . -type f -name '*.php' ! -path './vendor/*' ! -path './shops/*' -exec vendor/bin/phpmd {} text unusedcode \;)

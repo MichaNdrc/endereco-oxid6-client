@@ -2,19 +2,30 @@ version: "3.9"
 services:
   db:
     platform: linux/x86_64
-    image: mysql:5.6
+    image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: db
       MYSQL_USER: user
       MYSQL_PASSWORD: pwd
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
   oxid_shop:
-    image: endereco/oxid-6.4:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PHP_VERSION: "8.1"
+        OXID_COMPOSER_VERSION: "dev-b-6.5-ce"
     container_name: oxid_shop
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pwd
+      SHOP_URL: "http://localhost/"
     volumes:
       - ./:/var/www/html/source/modules/endereco/endereco-oxid6-client
     ports:

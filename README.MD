@@ -112,9 +112,98 @@ The installation is done in the following steps:
    - `phpstan.6.5.neon` - OXID 6.5
 
 4. **Before Committing**
-   
+
    Ensure all quality checks pass:
    ```bash
    composer qa
    ```
+
+## Testing
+
+Test the module with different OXID 6 versions using:
+
+```bash
+./playground.sh
+```
+
+The script will prompt for the following options:
+
+- **OXID version** — `6.3`, `6.4`, or `6.5`
+- **XDebug** — enable step debugging on port 9003 (IDE must be in listen mode)
+- **Migration mode** — test the `bEnderecoUseMigrations = true` code path instead of the default `onActivate`-based DB setup
+- **Force rebuild** — discard the cached Docker image and rebuild from scratch
+
+The container starts on **port 80**. If the port is already in use, the script offers to stop the blocking container or choose an alternative port (81–89 or 8080–8089).
+
+On first start the OXID shop is set up automatically (schema import, demo data, module activation). The shop shows a 500 error during setup — reload after a moment.
+
+Log in to the OXID admin panel at `http://localhost/admin` with:
+
+```
+E-Mail:   admin@example.com
+Password: admin
+```
+
+In the admin panel, navigate to **Extensions → Modules → Endereco** and open the module configuration to enter a valid API key.
+You can request a test API key at [endereco.de](https://endereco.de).
+
+To stop the environment:
+
+```bash
+docker rm -f oxid-{version} oxid-{version}-db && docker network rm oxid-{version}-net
+```
+
+## Scripts and Utilities
+
+This repository includes several shell scripts to assist with development and testing.
+
+### Shell Scripts
+
+#### `fetch_shops.sh`
+Downloads and sets up different OXID 6 versions for static analysis and development.
+
+**Description:** Installs OXID 6.1–6.5 via Composer (using pinned Composer Docker images per version) into the `shops/` directory. Also generates the `OxidEsales\Eshop\*` proxy classes required by PHPStan. Already-installed versions are skipped automatically.
+
+**Usage:**
+```bash
+./fetch_shops.sh
+```
+
+Requires Docker. Composer cache is shared across runs via `.composer-docker-cache/`.
+
+#### `playground.sh`
+Launches an interactive OXID 6 development environment in Docker.
+
+**Description:** Builds a Docker image with the selected OXID version (6.3, 6.4, or 6.5) and the module volume-mounted for live development. Handles port conflicts, optional XDebug setup, optional migration mode, and full auto-setup on first start.
+
+**Usage:**
+```bash
+./playground.sh
+```
+
+Access the shop at `http://localhost/` and the admin panel at `http://localhost/admin` with credentials `admin@example.com` / `admin`.
+
+#### `test_php_versions.sh`
+Tests PHP syntax compatibility across multiple PHP versions.
+
+**Description:** Checks all PHP files in the project (excluding `vendor/`, `node_modules/`, and `shops/`) against PHP 7.0–8.4 using Docker images. Stops immediately on the first syntax error found.
+
+**Usage:**
+```bash
+./test_php_versions.sh
+```
+
+Requires Docker. Reports any syntax errors found during testing.
+
+#### `check_phpmd.sh`
+Detects unused code using PHP Mess Detector.
+
+**Description:** Runs PHP Mess Detector (phpmd) on all PHP files (excluding `vendor/` and `shops/`) to identify unused variables, parameters, and code.
+
+**Usage:**
+```bash
+./check_phpmd.sh
+```
+
+Returns exit code 1 if issues are found, 0 otherwise.
 
